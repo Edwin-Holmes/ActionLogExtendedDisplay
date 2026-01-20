@@ -3,13 +3,16 @@ name: Release Mod
 on:
   push:
     branches:
-      - '**'   
+      - '**'   # run on any branch push
     tags:
-      - 'v*'   
+      - 'v*'   # also run on version tags
 
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write   # allow creating releases
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
