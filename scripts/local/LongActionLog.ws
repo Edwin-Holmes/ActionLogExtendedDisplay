@@ -11,6 +11,7 @@
         queue = flashModule.GetMemberFlashObject("messagesQueue");
         if (queue)
         {
+                                      // edit this number: 1s = 1000
             queue.SetMemberFlashNumber("msgVisibilityDuration", 9000);
         }
     }
