@@ -3,12 +3,11 @@ name: Create Artifact
 on:
   push:
     branches:
-      - '**'   # run on any branch push
+      - '**'
+
 jobs:
   build:
     runs-on: windows-latest
-    permissions:
-      contents: write   # allow creating releases
 
     steps:
       - name: Checkout repo
@@ -19,10 +18,10 @@ jobs:
         run: |
           $workspaceRoot = "${{ github.workspace }}"
           $repoName      = "${{ github.event.repository.name }}"
+          $version       = "${{ github.ref_name }}"
           $modName       = "mod$repoName"
 
           $buildRoot   = Join-Path $workspaceRoot "build"
-          $zipPath     = Join-Path $workspaceRoot "$repoName.zip"
           $binPath     = Join-Path $buildRoot "bin\config\r4game\user_config_matrix\pc"
           $modPath     = Join-Path $buildRoot "mods\$modName"
           $contentPath = Join-Path $modPath "content"
@@ -63,14 +62,8 @@ jobs:
             }
           }
 
-          Compress-Archive -Path "$buildRoot\*" -DestinationPath $zipPath -Force
-          Write-Host "Packaged $zipPath successfully!"
-
-          # Export path for later steps
-          "ZIP_PATH=$zipPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-      - name: Upload artifact (always)
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: packaged-mod
-          path: ${{ env.ZIP_PATH }}
+          name: ${{ github.event.repository.name }}-${{ github.ref_name }}
+          path: build/
