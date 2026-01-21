@@ -21,15 +21,14 @@ jobs:
         shell: pwsh
         run: |
           $workspaceRoot = "${{ github.workspace }}"
-          $workspaceName = Split-Path -Leaf $workspaceRoot
-          $modName       = "mod$workspaceName"
+          $repoName      = "${{ github.event.repository.name }}"
+          $modName       = "mod$repoName"
 
-          $buildRoot = "$workspaceRoot\build"
-          $zipPath   = "$workspaceRoot\$workspaceName.zip"
-
-          $binPath     = "$buildRoot\bin\config\r4game\user_config_matrix\pc"
-          $modPath     = "$buildRoot\mods\$modName"
-          $contentPath = "$modPath\content"
+          $buildRoot   = Join-Path $workspaceRoot "build"
+          $zipPath     = Join-Path $workspaceRoot "$repoName.zip"   # single source of truth
+          $binPath     = Join-Path $buildRoot "bin\config\r4game\user_config_matrix\pc"
+          $modPath     = Join-Path $buildRoot "mods\$modName"
+          $contentPath = Join-Path $modPath "content"
 
           if (Test-Path $buildRoot) { Remove-Item $buildRoot -Recurse -Force }
           New-Item -Force -ItemType Directory -Path $contentPath | Out-Null
@@ -68,17 +67,25 @@ jobs:
           }
 
           Compress-Archive -Path "$buildRoot\*" -DestinationPath $zipPath -Force
-          Write-Host "Packaged $zipPath successfully!"
+
+          # Verify zip exists and expose path to later steps
+          Write-Host "Packaged zip at: $zipPath"
+          if (-not (Test-Path $zipPath)) {
+            Write-Error "Zip not found at $zipPath"
+            exit 1
+          }
+          # Export ZIP_PATH for subsequent steps
+          "$([Environment]::NewLine)ZIP_PATH=$zipPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Upload artifact (always)
         uses: actions/upload-artifact@v4
         with:
           name: packaged-mod
-          path: ${{ github.workspace }}\${{ github.event.repository.name }}.zip
+          path: ${{ env.ZIP_PATH }}
           compression-level: 0
 
       - name: Upload release asset (only on tags)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{ github.workspace }}\${{ github.event.repository.name }}.zip
+          files: ${{ env.ZIP_PATH }}
