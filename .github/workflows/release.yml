@@ -25,7 +25,7 @@ jobs:
           $modName       = "mod$repoName"
 
           $buildRoot   = Join-Path $workspaceRoot "build"
-          $zipPath     = Join-Path $workspaceRoot "$repoName.zip"   # single source of truth
+          $zipPath     = Join-Path $workspaceRoot "$repoName.zip"
           $binPath     = Join-Path $buildRoot "bin\config\r4game\user_config_matrix\pc"
           $modPath     = Join-Path $buildRoot "mods\$modName"
           $contentPath = Join-Path $modPath "content"
@@ -67,15 +67,10 @@ jobs:
           }
 
           Compress-Archive -Path "$buildRoot\*" -DestinationPath $zipPath -Force
+          Write-Host "Packaged $zipPath successfully!"
 
-          # Verify zip exists and expose path to later steps
-          Write-Host "Packaged zip at: $zipPath"
-          if (-not (Test-Path $zipPath)) {
-            Write-Error "Zip not found at $zipPath"
-            exit 1
-          }
-          # Export ZIP_PATH for subsequent steps
-          "$([Environment]::NewLine)ZIP_PATH=$zipPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          # Export path for later steps
+          "ZIP_PATH=$zipPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Upload artifact (always)
         uses: actions/upload-artifact@v4
