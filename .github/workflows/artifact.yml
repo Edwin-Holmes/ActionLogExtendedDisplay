@@ -1,12 +1,9 @@
-name: Release Mod
+name: Create Artifact
 
 on:
   push:
     branches:
       - '**'   # run on any branch push
-    tags:
-      - 'v*'   # also run on version tags
-
 jobs:
   build:
     runs-on: windows-latest
@@ -77,10 +74,3 @@ jobs:
         with:
           name: packaged-mod
           path: ${{ env.ZIP_PATH }}
-          compression-level: 0
-
-      - name: Upload release asset (only on tags)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ${{ env.ZIP_PATH }}
